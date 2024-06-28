@@ -10,15 +10,22 @@ int main(int argc, char *argv[])
     /****************************************************************************************************/
     {
         QAESEncryption encryption(QAESEncryption::AES_128, QAESEncryption::ECB , QAESEncryption::ISO);
-        QByteArray input("HELLO AES");
+        QByteArray input = QString("HELLO AES").toLocal8Bit();
         QByteArray key = QString("your-string-key").toLocal8Bit();
 
-        QByteArray encodedText = encryption.encode(input, key);
-        QByteArray decodedText = encryption.decode(encodedText, key);
+        QByteArray encodeText = encryption.encode(input, key);
+        QByteArray decodeText = encryption.decode(encodeText, key);
 
-        qDebug() << encodedText;
-        QString decodedString = QString(QAESEncryption::RemovePadding(decodedText,QAESEncryption::ISO));
-        qDebug() << decodedString;
+        QString decodedString = QString(QAESEncryption::RemovePadding(decodeText,QAESEncryption::ISO));
+
+        qDebug() << " \n input = " << input
+                     << " \n encodeText = " << encodeText
+                     << " \n QString = " << QString(encodeText)
+                     << " \n QString(utf8) = " << QString::fromUtf8(encodeText)
+                     << " \n QString(local8bit) = " << QString::fromLocal8Bit(encodeText)
+                     << " \n decodeText = " << decodeText
+                     << " \n output = " << decodedString
+                     << " \n " ;
     }
     /****************************************************************************************************/
     {
@@ -37,7 +44,12 @@ int main(int argc, char *argv[])
 
         // Removal of Padding via Static function
         QString decodedString = QString(QAESEncryption::RemovePadding(decodeText,QAESEncryption::ISO));
-        qDebug() << decodedString;
+
+        qDebug() << " \n input = " << inputStr
+                     << " \n encodeText = " << encodeText
+                     << " \n decodeText = " << decodeText
+                     << " \n output = " << decodedString
+                     << " \n " ;
     }
     /****************************************************************************************************/
     {
@@ -57,7 +69,11 @@ int main(int argc, char *argv[])
 
         QString decodedString = QString(encryption.removePadding(decodeText));
 
-        qDebug() << decodedString;
+        qDebug() << " \n input = " << inputStr
+                     << " \n encodeText = " << encodeText
+                     << " \n decodeText = " << decodeText
+                     << " \n output = " << decodedString
+                     << " \n " ;
     }
 
     return 0;
