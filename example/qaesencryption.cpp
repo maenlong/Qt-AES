@@ -1,5 +1,5 @@
 #include "qaesencryption.h"
-
+#include <QDebug>
 
 const quint8 QAESEncryption::sbox[] =   {
      //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -189,7 +189,7 @@ QByteArray QAESEncryption::getPadding(int currSize, int alignment)
 QByteArray QAESEncryption::expandKey(const QByteArray &key)
 {
   int i, k;
-  quint8 tempa[4]; // Used for the column/row operations
+  quint8 tempa[4] = { 0 }; // Used for the column/row operations
   QByteArray roundKey(key);
 
   // The first round key is the key itself.
@@ -199,10 +199,17 @@ QByteArray QAESEncryption::expandKey(const QByteArray &key)
   //i == Nk
   for(i = m_nk; i < m_nb * (m_nr + 1); i++)
   {
-    tempa[0] = (quint8) roundKey.at((i-1) * 4 + 0);
-    tempa[1] = (quint8) roundKey.at((i-1) * 4 + 1);
-    tempa[2] = (quint8) roundKey.at((i-1) * 4 + 2);
-    tempa[3] = (quint8) roundKey.at((i-1) * 4 + 3);
+	  if ((i - 1) * 4 + 3 < roundKey.size())
+	  {
+		  tempa[0] = (quint8)roundKey.at((i - 1) * 4 + 0);
+		  tempa[1] = (quint8)roundKey.at((i - 1) * 4 + 1);
+		  tempa[2] = (quint8)roundKey.at((i - 1) * 4 + 2);
+		  tempa[3] = (quint8)roundKey.at((i - 1) * 4 + 3);
+	  }
+	  else
+	  {
+        qDebug() << "roundKey.size = " << roundKey.size() << " But useIndex = " << (i - 1) * 4 + 3;
+	  }
 
     if (i % m_nk == 0)
     {
