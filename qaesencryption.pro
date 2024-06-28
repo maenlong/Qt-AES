@@ -15,7 +15,7 @@ TEMPLATE = app
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-DEFINES += USE_INTEL_AES_IF_AVAILABLE
+#DEFINES += USE_INTEL_AES_IF_AVAILABLE
 QMAKE_CXXFLAGS += -maes
 
 # You can also make your code fail to compile if you use deprecated APIs.
