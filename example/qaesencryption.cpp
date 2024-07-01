@@ -1,4 +1,5 @@
 #include "qaesencryption.h"
+#include <QDebug>
 
 //#define USE_INTEL_AES_IF_AVAILABLE
 
@@ -241,10 +242,17 @@ QByteArray QAESEncryption::expandKey(const QByteArray &key, bool isEncryptionKey
       //i == Nk
       for(i = m_nk; i < m_nb * (m_nr + 1); i++)
       {
-        tempa[0] = (quint8) roundKey.at((i-1) * 4 + 0);
-        tempa[1] = (quint8) roundKey.at((i-1) * 4 + 1);
-        tempa[2] = (quint8) roundKey.at((i-1) * 4 + 2);
-        tempa[3] = (quint8) roundKey.at((i-1) * 4 + 3);
+		if ((i - 1) * 4 + 3 < roundKey.size())
+		{
+			tempa[0] = (quint8) roundKey.at((i-1) * 4 + 0);
+			tempa[1] = (quint8) roundKey.at((i-1) * 4 + 1);
+			tempa[2] = (quint8) roundKey.at((i-1) * 4 + 2);
+			tempa[3] = (quint8) roundKey.at((i-1) * 4 + 3);
+		}
+		else
+		{
+			qDebug() << "roundKey.size = " << roundKey.size() << " But useIndex = " << (i - 1) * 4 + 3;
+		}
 
         if (i % m_nk == 0)
         {
@@ -501,13 +509,23 @@ QByteArray QAESEncryption::printArray(uchar* arr, int size)
 QByteArray QAESEncryption::encode(const QByteArray &rawText, const QByteArray &key, const QByteArray &iv)
 {
     if ((m_mode >= CBC && (iv.isEmpty() || iv.size() != m_blocklen)) || key.size() != m_keyLen)
-           return QByteArray();
+    {
+        qDebug() << __FUNCTION__
+            << "\n m_mode = " << m_mode
+            << "\n m_keyLen = " << m_keyLen
+            << "\n m_blocklen = " << m_blocklen
+            << "\n rawText = " << rawText
+            << "\n key = " << key << " key = " << key.size()
+            << "\n iv = " << iv << " Size = " << iv.size();
 
-        QByteArray expandedKey = expandKey(key, true);
-        QByteArray alignedText(rawText);
+       return QByteArray();
+    }
 
-        //Fill array with padding
-        alignedText.append(getPadding(rawText.size(), m_blocklen));
+    QByteArray expandedKey = expandKey(key, true);
+    QByteArray alignedText(rawText);
+
+    //Fill array with padding
+    alignedText.append(getPadding(rawText.size(), m_blocklen));
 
     switch(m_mode)
     {
@@ -592,23 +610,33 @@ QByteArray QAESEncryption::encode(const QByteArray &rawText, const QByteArray &k
 QByteArray QAESEncryption::decode(const QByteArray &rawText, const QByteArray &key, const QByteArray &iv)
 {
     if ((m_mode >= CBC && (iv.isEmpty() || iv.size() != m_blocklen)) || key.size() != m_keyLen || rawText.size() % m_blocklen != 0)
-           return QByteArray();
+    {
+        qDebug() << __FUNCTION__
+            << "\n m_mode = " << m_mode
+            << "\n m_keyLen = " << m_keyLen
+            << "\n m_blocklen = " << m_blocklen
+            << "\n rawText = " << rawText
+            << "\n key = " << key << " key = " << key.size()
+            << "\n iv = " << iv << " Size = " << iv.size();
 
-        QByteArray ret;
-        QByteArray expandedKey;
+       return QByteArray();
+    }
 
-    #ifdef USE_INTEL_AES_IF_AVAILABLE
-        if(m_aesNIAvailable && m_mode <= CBC){
-            expandedKey = expandKey(key, false);
-        }else{
-            expandedKey = expandKey(key, true);
-        }
-    #else
+    QByteArray ret;
+    QByteArray expandedKey;
+
+#ifdef USE_INTEL_AES_IF_AVAILABLE
+    if(m_aesNIAvailable && m_mode <= CBC){
+        expandedKey = expandKey(key, false);
+    }else{
         expandedKey = expandKey(key, true);
-    #endif
-        //false or true here is very important
-        //the expandedKeys aren't the same for !aes-ni! ENcryption and DEcryption (only CBC and EBC)
-        //but if you are !NOT! using aes-ni then the expandedKeys for encryption and decryption are the SAME!!!
+    }
+#else
+    expandedKey = expandKey(key, true);
+#endif
+    //false or true here is very important
+    //the expandedKeys aren't the same for !aes-ni! ENcryption and DEcryption (only CBC and EBC)
+    //but if you are !NOT! using aes-ni then the expandedKeys for encryption and decryption are the SAME!!!
 
 
     switch(m_mode)
